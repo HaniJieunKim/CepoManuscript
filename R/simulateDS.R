@@ -57,9 +57,6 @@ replace_ds_genes_v2 = function(x, labels, target_celltype = sort(unique(labels))
     
     stopifnot(is.vector(x))
     
-    #target_celltype=sort(unique(labels))[1]
-    #x=sim_ds
-    
     index_a = which(labels == target_celltype) ## All index of targeted celltype
     index_b = which(labels != target_celltype)
     
@@ -71,14 +68,9 @@ replace_ds_genes_v2 = function(x, labels, target_celltype = sort(unique(labels))
                           mean = mean_scale*nz_mean(xb), sd = sd_scale*nz_sd(xb))
     
     xb_replace = xb
-    xb_replace[xb_replace != 0] = xb_nz_replace # replace with normal distrn
+    xb_replace[xb_replace != 0] = xb_nz_replace 
     xb_replace = ifelse(xb_replace <= 0, 0, xb_replace)
-    #xb_replace = ifelse(xb_replace >= nz_mean(xa), 0, xb_replace)
-    
-    # want to randomly add more zeros (e.g. 10%, 20%, etc...) - not overlapping with already zeros
-    # if we decide not to add any, skip, otherwise
-    # randomly sample prop from non-zero genes/cells, and set to zero
-    
+
     if(add_zero > 0){
         size_non_z = length(xb_replace[xb_replace != 0])
         non_z_idx = which(xb_replace != 0)

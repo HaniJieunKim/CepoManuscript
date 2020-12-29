@@ -65,15 +65,6 @@ Cepo <- function(exprsMat, cellTypes, exprs_pct=0.05, filter=FALSE) {
 }
 
 segIndex <- function(mat){
-    # nz <- (rowSums(mat != 0) / ncol(mat))
-    # ms <- apply(mat, 1, function(x){mean(x)})
-    # cvs <- apply(mat, 1, function(x){
-    #     return(sd(x)/mean(x))
-    # })
-    
-    # nz <- Matrix::rowMeans(mat != 0)
-    # ms <- Matrix::rowMeans(mat)
-    # sds <- matrixStats::rowSds(mat)
     nz <- DelayedMatrixStats::rowMeans2(mat != 0)
     ms <- DelayedMatrixStats::rowMeans2(mat)
     sds <- DelayedMatrixStats::rowSds(mat)
@@ -83,7 +74,6 @@ segIndex <- function(mat){
     x1 <- rank(nz)/(length(nz)+1)
     x2 <- 1 - rank(cvs)/(length(cvs)+1)
     
-    # segIdx <- apply(cbind(x1, x2), 1, mean)
     segIdx <- DelayedMatrixStats::rowMeans2(DelayedArray::cbind(x1, x2))
     names(segIdx) = rownames(mat)
     return(segIdx)

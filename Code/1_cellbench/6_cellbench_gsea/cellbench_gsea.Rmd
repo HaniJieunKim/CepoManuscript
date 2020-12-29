@@ -58,8 +58,8 @@ source("../../../R/utils.R")
 exprsMat <- logcounts(sce_10x_log)
 celltype <- factor(sce_10x_log$celltype)
 
-zprop_score <- calcStability(exprsMat, celltype, score="zprop")
-cv_score <- calcStability(exprsMat, celltype, score="cv")
+zprop_score <- Cepo_components(exprsMat, celltype, score="zprop")
+cv_score <- Cepo_components(exprsMat, celltype, score="cv")
 
 idx_all <- lapply(levels(celltype), function(x) {
   intersect(names(cv_score[[x]]), names(zprop_score[[x]][!is.infinite(zprop_score[[x]])]))
