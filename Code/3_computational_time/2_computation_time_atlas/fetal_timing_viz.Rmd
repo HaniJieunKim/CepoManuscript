@@ -34,9 +34,7 @@ suppressPackageStartupMessages({
 
 ## Load timing results
 ```{r}
-load("../../../Data/fetal_timing_SMS_29Dec2020.RData", verbose=T)
-
-result_tbl$timing_result <- c(2935, 5111, 7706, 10650, 10919, 11837)
+load("../../../Data/fetal_timing_SMS_31Dec2020.RData", verbose=T)
 ```
 
 # Run Cepo
