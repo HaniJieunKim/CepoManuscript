@@ -128,6 +128,8 @@ for (i in 1:length(trainIndex)) {
 }
 
 boxplot(grand.DS, grand.MAST, grand.Voom, grand.DD, main="mouse p=0.8 k=10 top=25", col="gray")
+
+save(grand.DS, grand.MAST, grand.Voom, grand.DD, file="../../../Data/pijuan_classification_technology_results.RData")
 ```
 
 # Perform cross-species classification of human and mouse
@@ -186,6 +188,8 @@ for (i in 1:length(trainIndex)) {
   grand.rand <- c(grand.rand, mean(avgAcc(human.lineage[sample(1:length(human.lineage))], human.lineage)))
 }
 boxplot(grand.DS, grand.MAST, grand.Voom, grand.DD, main="human p=0.8 k=10 top=25", col="gray")
+
+save(grand.DS, grand.MAST, grand.Voom, grand.DD, file="../../../Data/pijuan_classification_species_results.RData")
 ```
 
 # Session Info
