@@ -57,23 +57,15 @@ source("../../../R/utils.R")
 exprsMat <- logcounts(sce_10x_log)
 celltype <- factor(sce_10x_log$celltype)
 
-zprop_score <- Cepo_components(exprsMat, celltype, score="zprop")
-cv_score <- Cepo_components(exprsMat, celltype, score="cv")
-
 zprop <- apply(exprsMat, 1, function(x) length(x[x==0])/length(x))
 cv <- apply(exprsMat, 1, function(x) sd(x)/mean(x))
-
-idx_all <- lapply(levels(celltype), function(x) {
-  intersect(names(cv_score[[x]]), names(zprop_score[[x]][!is.infinite(zprop_score[[x]])]))
-            })
-names(idx_all) <- levels(celltype)
 ```
 
 # Plot pairwise scatter plot of ranks
 ```{r}
 ggstability_ranked <- lapply(levels(celltype), function(i) {
   
-  idx <- idx_all[[i]]
+  idx <- names(cv)
   df=data.frame(Cepo=rank(DS.res[[i]])[idx],
                 Voom=rank(Voom.res[[i]])[idx],
                 Limma=rank(Limma.res[[i]])[idx],
@@ -82,8 +74,6 @@ ggstability_ranked <- lapply(levels(celltype), function(i) {
                 MAST=rank(MAST.res[[i]])[idx],
                 Wilcoxon=rank(Wilcoxon.res[[i]])[idx],
                 DD=rank(DD.res[[i]])[idx],
-                rCV=rank(cv_score[[i]])[idx],
-                rzprop=rank(zprop_score[[i]])[idx],
                 zprop=zprop[idx])
   rownames(df) = idx
   return(df)
@@ -95,9 +85,9 @@ lapply(levels(celltype), function(i) {
   
   type <- i
   GGally::ggpairs(ggstability_ranked[[i]],
-                  1:10,
+                  1:8,
                   lower = list(continuous = wrap(GGscatterPlot, color_vec=ggstability_ranked[[i]]$zprop)),
-                  upper = list(continuous = wrap("cor", method= "spearman"))) %>% ggsave(filename=paste0("../../../Figures/cellbench/cellbench_ggpairs_stability2_", type,".pdf"), width=10, height=10)
+                  upper = list(continuous = wrap("cor", method= "pearson"))) %>% ggsave(filename=paste0("../../../Figures/cellbench/cellbench_ggpairs_stability3_", type,".pdf"), width=10, height=10)
   
 })
 ```
