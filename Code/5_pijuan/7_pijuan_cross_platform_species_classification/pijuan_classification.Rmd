@@ -83,7 +83,7 @@ colnames(pijuan_E6.5) <- paste("Cell", 1:ncol(pijuan_E6.5), sep="")
 ```{r}
 # repeat 10 times (stratified sampling 80%)
 set.seed(1)
-trainIndex <- createDataPartition(marioni_E6.5.lineage, p = .8, times = 10)
+trainIndex <- createDataPartition(marioni_E6.5.lineage, p = .8, times = 15)
 
 grand.DS <- c()
 grand.MAST <- c()
@@ -127,9 +127,9 @@ for (i in 1:length(trainIndex)) {
 
 }
 
-boxplot(grand.DS, grand.MAST, grand.Voom, grand.DD, main="mouse p=0.8 k=10 top=25", col="gray")
+boxplot(grand.DS, grand.MAST, grand.Voom, grand.DD, main="mouse p=0.8 k=15 top=25", col="gray")
 
-save(grand.DS, grand.MAST, grand.Voom, grand.DD, file="../../../Data/pijuan_classification_technology_results.RData")
+save(grand.DS, grand.MAST, grand.Voom, grand.DD, file="../../../Data/pijuan_classification_technology_results2.RData")
 ```
 
 # Perform cross-species classification of human and mouse
@@ -146,7 +146,7 @@ colnames(human) <- paste("Cell", 1:ncol(human), sep="")
 ```{r}
 # repeat 10 times (stratified sampling 80%)
 set.seed(12345)
-trainIndex <- createDataPartition(marioni_E6.5.lineage, p = .8, times = 10)
+trainIndex <- createDataPartition(marioni_E6.5.lineage, p = .8, times = 15)
 
 grand.DS <- c()
 grand.MAST <- c()
@@ -187,9 +187,20 @@ for (i in 1:length(trainIndex)) {
   grand.DD <- c(grand.DD, mean(avgAcc(pred.DD, human.lineage)))
   grand.rand <- c(grand.rand, mean(avgAcc(human.lineage[sample(1:length(human.lineage))], human.lineage)))
 }
-boxplot(grand.DS, grand.MAST, grand.Voom, grand.DD, main="human p=0.8 k=10 top=25", col="gray")
+boxplot(grand.DS, grand.MAST, grand.Voom, grand.DD, main="human p=0.8 k=15 top=25", col="gray")
 
-save(grand.DS, grand.MAST, grand.Voom, grand.DD, file="../../../Data/pijuan_classification_species_results.RData")
+save(grand.DS, grand.MAST, grand.Voom, grand.DD, file="../../../Data/pijuan_classification_species_results2.RData")
+```
+
+```{r}
+pdf("../../../Figures/pijuan_classification.pdf", width = 10, height = 5)
+par(mfrow=c(1,2))
+load("../../../Data/pijuan_classification_technology_results2.RData")
+boxplot(grand.DS, grand.Voom, grand.DD, grand.MAST, main="human p=0.8 k=15 top=25", col="gray")
+
+load("../../../Data/pijuan_classification_species_results2.RData")
+boxplot(grand.DS, grand.Voom, grand.DD, grand.MAST, main="human p=0.8 k=15 top=25", col="gray")
+dev.off()
 ```
 
 # Session Info
