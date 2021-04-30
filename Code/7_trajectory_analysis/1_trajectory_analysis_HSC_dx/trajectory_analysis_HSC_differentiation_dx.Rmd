@@ -38,6 +38,8 @@ suppressPackageStartupMessages({
   library(dyntoy)
   library(dyneval)
   library(patchwork)
+  library(Seurat)
+  library(M3Drop)
 })
 
 #dynwrap::test_docker_installation(detailed = TRUE)
@@ -53,6 +55,9 @@ traj <- readRDS("../../../Data/dataset_hspc_c1.rds")
 source("../../../R/Cepo.R") 
 source("../../../R/doDE.R")
 source("../../../R/doDD.R")
+source("../../../R/doLR.R")
+source("../../../R/doSCVI.R")
+source("../../../R/doM3Drop.R")
 source("../../../R/utils.R")
 ```
 
@@ -137,6 +142,36 @@ save(DS.res,
      Voom, Voom.res,
      MAST, MAST.res,
      file="../../../Data/Dx_benchmark_result_HSPC.RData")
+```
+
+# Additional methods
+```{r}
+##### run Seurat DE, SCVI, M3Drop methods
+seu = Seurat::as.Seurat(sce)
+names(cty) = colnames(seu)
+seu@active.ident = cty
+
+system.time(LR <- doLR(seu, cty))
+LR.res <- getStats(LR, method="LR")
+
+system.time(ROC <- doROC(seu, cty))
+ROC.res <- getStats(ROC, method="ROC")
+
+system.time(Bimod <- doBimod(seu, cty))
+Bimod.res <- getStats(Bimod, method="Bimod")
+
+system.time(SCVI <- doSCVI(seu, cty, n_epoch = 400))
+SCVI.res <- getStats(SCVI, method="SCVI")
+
+M3DROP <- doM3Drop(logcounts(sce), cty) 
+M3DROP.res <- getStats(M3DROP, method="M3Drop")
+
+save(LR, LR.res,
+     ROC, ROC.res,
+     Bimod, Bimod.res,
+     SCVI, SCVI.res,
+     M3DROP, M3DROP.res,
+     file="../../../Data/Dx_benchmark_result_HSPC_additional_methods.RData")
 ```
 
 # Session info

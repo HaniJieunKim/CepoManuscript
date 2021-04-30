@@ -28,8 +28,10 @@ This script generates heatmap of gene expression for the top 200 differential ge
 ## Packages
 ```{r, message = FALSE}
 suppressPackageStartupMessages({
-    library(SingleCellExperiment)
-    library(pheatmap)
+  library(SingleCellExperiment)
+  library(pheatmap)
+  library(dplyr)
+  library(ggplot2)
 })
 ```
 
@@ -41,6 +43,7 @@ rm(sce_Dropseq_log)
 
 load("../../../Data/cellbench_Dx_benchmark_results.RData", verbose=T)
 load("../../../Data/cellbench_DE_benchmark_results.RData", verbose=T)
+load("../../../Data/cellbench_LR_benchmark_results.RData", verbose=T)
 ```
 
 ## Source functions
@@ -54,11 +57,13 @@ DS.gene <- lapply(DS.res, function(x) names(x))
 MAST.gene <- lapply(MAST.res, function(x) names(x))
 Voom.gene <- lapply(Voom.res, function(x) names(x))
 DD.gene <- lapply(DD.res, function(x) names(x))
+LR.gene <- lapply(LR.res, function(x) names(x))
 
 Dx.gene <- list(Cepo=DS.gene,
                 MAST=MAST.gene,
                 Voom=Voom.gene,
-                DD=DD.gene)
+                DD=DD.gene,
+                LR=LR.gene)
 ```
 
 # Generate Upset plot of overlaps (top 50 genes)
@@ -68,7 +73,7 @@ lapply(cty, function(celltype) {
     Dx.gene.celltype <- lapply(Dx.gene, function(x) x[[celltype]][1:50])
     names(Dx.gene.celltype) <- names(Dx.gene)
     pdf(file = paste0("../../../Figures/cellbench/cellbench_upset_",celltype,".pdf"))
-    print(UpSetR::upset(UpSetR::fromList(Dx.gene.celltype), nsets=4))
+    print(UpSetR::upset(UpSetR::fromList(Dx.gene.celltype), nsets=5))
     dev.off()
 })
 ```

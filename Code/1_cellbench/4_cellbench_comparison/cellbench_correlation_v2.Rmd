@@ -1,0 +1,123 @@
+---
+title: "Cellbench correlation plot of differential analysis statistics"
+author: "Hani Kim"
+date: "`r paste0('Initiated on 2020 Oct 31, compiled on ', format(Sys.time(), '%Y %b %d'))`"
+output:
+  html_document:
+    code_folding: hide
+    fig_height: 12
+    fig_width: 12
+    toc: yes
+    number_sections: true
+    toc_depth: 3
+    toc_float: yes
+    theme: paper
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Summary
+This script generates correlation plot of the ranked differential statistics generated using the benchmarked differential analysis methods. 
+
+# Loading 
+
+## Packages
+```{r, message = FALSE}
+suppressPackageStartupMessages({
+  library(SingleCellExperiment)
+  library(Hmisc)
+  library(corrplot)
+  library(ggcorrplot)
+  library(GGally)
+  library(RColorBrewer)
+})
+```
+
+## Load 3-class cellbench data and dx results
+```{r}
+load("../../../Data/cellbench_sce_3class.RData", verbose=T)
+rm(sce_CELseq2_log)
+rm(sce_Dropseq_log)
+
+load("../../../Data/cellbench_DE_benchmark_results.RData", verbose=T)
+load("../../../Data/cellbench_Dx_benchmark_results.RData", verbose=T)
+load("../../../Data/cellbench_Seurat_benchmark_results.RData", verbose=T)
+load("../../../Data/cellbench_SCVI_benchmark_results.RData", verbose=T)
+load("../../../Data/cellbench_M3Drop_benchmark_results.RData", verbose=T)
+```
+
+## Source functions
+```{r}
+source("../../../R/utils.R")
+```
+
+# Calculate stability scores
+```{r}
+exprsMat <- logcounts(sce_10x_log)
+celltype <- factor(sce_10x_log$celltype)
+
+zprop <- apply(exprsMat, 1, function(x) length(x[x==0])/length(x))
+cv <- apply(exprsMat, 1, function(x) sd(x)/mean(x))
+```
+
+# Generate correlation plot against stability score
+```{r fig.height=5, fig.width=10}
+g = lapply(levels(celltype), function(i) {
+  
+  idx <- names(cv)
+  df=data.frame(Cepo=rank(DS.res[[i]])[idx],
+                Voom=rank(Voom.res[[i]])[idx],
+                Limma=rank(Limma.res[[i]])[idx],
+                ttest=rank(ttest.res[[i]])[idx],
+                EdgeR=rank(EdgeR.res[[i]])[idx],
+                ROC=rank(ROC.res[[i]])[idx],
+                MAST=rank(MAST.res[[i]])[idx],
+                Wilcoxon=rank(Wilcoxon.res[[i]])[idx],
+                DD=rank(DD.res[[i]])[idx],
+                #M3Drop=rank(M3DROP.res[[i]])[idx],
+                SCVI=rank(SCVI.res[[i]])[idx],
+                Bimod=rank(Bimod.res[[i]])[idx],
+                LR=rank(LR.res[[i]])[idx]
+                )
+  rownames(df) = idx
+
+  res <- rcorr(as.matrix(df), type="pearson")
+  res_cor <- c(res$r)
+  res_cor <- matrix(res_cor, nrow=ncol(df), ncol=ncol(df))
+  rownames(res_cor) <- colnames(df)
+  colnames(res_cor) <- colnames(df)
+  
+  my_col <- rev(RColorBrewer::brewer.pal(11, "Spectral"))
+  #corrplot(res_cor, type = "lower", p.mat = res$P, 
+           #sig.level = 0.01, addCoef.col = "black",
+           #tl.col="black", tl.srt=45,title=i,
+           #col= colorRampPalette(my_col)(20)
+           #)
+  c = ggcorrplot(res_cor, hc.order = FALSE, 
+               #type = "lower", 
+               #method  = "circle",
+               outline.color = "white") + 
+      scale_fill_gradient2(limit = c(-0.2,1), 
+                           low = "blue", 
+                           high = "red", 
+                           mid = "white", 
+                           midpoint = 0.4)
+  
+  return(c)
+    
+})
+
+patchwork::wrap_plots(g, ncol =3) %>% ggsave(filename = "../../../Figures/cellbench/cellbench_correlation_210429.pdf", 
+    width=20, height=6)
+```
+
+# Session Info
+```{r}
+sessioninfo::session_info()
+```
+
+

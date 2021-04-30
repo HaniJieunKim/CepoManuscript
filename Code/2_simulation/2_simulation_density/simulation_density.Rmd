@@ -31,6 +31,7 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(plyexperiment)
   library(ggthemes)
+  library(dplyr)
 })
 ```
 
@@ -44,7 +45,7 @@ source("../../../R/simulateDS.R")
 load("../../../Data/201210_simulation_stability_genes.RData", verbose=T)
 load("../../../Data/201210_simulation_params.RData", verbose=T)
 
-sim_logcounts = sim %>% logcounts %>% rm_cols_rows_zeroes()
+sim_logcounts = sim_ds
 ```
 
 # Generate histogram of differentially stimulated genes (all combinations)
@@ -73,13 +74,13 @@ gg.sim.eg <- lapply(1:nrow(param_grid_viz), function(i) {
 })
 gg.sim.eg <- do.call(rbind, gg.sim.eg)
 
-pdf(file="../../../Figures/simulation/simulation_distributions_full.pdf", width=20, height=20)
+#pdf(file="../../../Figures/simulation/simulation_distributions_full.pdf", width=20, height=20)
   ggplot(gg.sim.eg, aes(x=exprs, fill=celltype)) + 
   geom_density(alpha=.2) + 
   scale_fill_manual(values=c("#FF6666", "#66EBFF")) + 
   facet_wrap(~sd_scale + add_zero, ncol=7) +
   theme_clean()
-dev.off()
+#dev.off()
 ```
 
 # Session Info

@@ -61,6 +61,7 @@ mat <- logcounts(sce_10x_log)
 DS.permut = furrr::future_map(
   1:1000, 
   ~ Cepo(exprsMat = mat, cellTypes = sample(cty)), .progress = TRUE)
+
 #future::plan(multisession, workers = 2)
 DS.permut.pvalue_H1975 = purrr::map(
   .x = DS.permut,

@@ -46,6 +46,7 @@ suppressPackageStartupMessages({
 ## Load HSPC single cell data and Dx results
 ```{r}
 load("../../../Data/Dx_benchmark_result_HSPC.RData", verbose = T)
+load("../../../Data/Dx_benchmark_result_HSPC_additional_methods.RData", verbose = T)
 load("../../../Data/trajectory_sce_HSC.RData", verbose=T)
 ```
 
@@ -62,13 +63,23 @@ features1 = unique(unlist(lapply(DS.res, function(x) names(x)[1:n])))
 features2 = unique(unlist(lapply(Voom.res, function(x) names(x)[1:n])))
 features3 = unique(unlist(lapply(DD.res, function(x) names(x)[1:n])))
 features4 = unique(unlist(lapply(MAST.res, function(x) names(x)[1:n])))
+features5 = unique(unlist(lapply(LR.res, function(x) names(x)[1:n])))
+features6 = unique(unlist(lapply(ROC.res, function(x) names(x)[1:n])))
+features7 = unique(unlist(lapply(Bimod.res, function(x) names(x)[1:n])))
+features8 = unique(unlist(lapply(SCVI.res, function(x) names(x)[1:n])))
+features9 = unique(unlist(lapply(M3DROP.res, function(x) names(x)[1:n])))
 
 pdf("../../../Figures/trajectory_analysis/trajectory_dx_upset_plot.pdf", width=10, height=5)
 print(UpSetR::upset(UpSetR::fromList(list(Cepo=features1,
                                           Voom=features2,
                                           DD=features3,
-                                          MAST=features4
-))))
+                                          MAST=features4,
+                                          LR=features5,
+                                          ROC=features6,
+                                          Bimod=features7,
+                                          SCVI=features8,
+                                          M3Drop=features9)),
+                    nsets = 9))
 dev.off()
 ```
 
@@ -132,7 +143,60 @@ patchwork::wrap_plots(list_full_model$celltype_plot[c(2:5, 1)],
   ggsave(filename="../../../Figures/trajectory_analysis/trajectory_dx_trajectories_mst.pdf", width=6, height=13)
 ```
 
-# Visualise expression of key marker genes
+# Additional methods
+## Generate trajectories
+```{r}
+list_full_model = tibble(
+  features = lst(
+    tl_featuresall = unique(c(features1, features2, features3, features4,
+                              features5, features6, features7, features8,
+                              features9
+                              )),
+    tl_features1 = features1, 
+    tl_features2 = features2,
+    tl_features3 = features3,
+    tl_features4 = features4,
+    tl_features5 = features5,
+    tl_features6 = features6,
+    tl_features7 = features7,
+    tl_features8 = features8,
+    tl_features9 = features9
+    ),
+  features_name = names(features),
+  dyno_data = purrr::map(
+    .x = features, 
+    .f = ~ make_dyno(sce[.x,], prop = 1L)),
+  method = "mst",
+  model = purrr::map2(
+    .x = dyno_data, 
+    .y = method,
+    .f = ~ infer_trajectory(
+      dataset = .x, 
+      method = ti_mst(dimred = "mds")) %>% 
+      add_dimred(dyndimred::dimred_mds, 
+                 expression_source = .x$expression)),
+  celltype_plot = purrr::map2(
+    .x = model,
+    .y = dyno_data,
+    .f = ~ plot_dimred(trajectory = .x, 
+                       expression_source = .y$expression, 
+                       grouping = .y$cell_info$group))
+)
+
+list_full_model
+
+save(list_full_model, file="../../../Data/trajecotories_HSC_traj_dx_results_additional_methods.RData")
+```
+
+## Visualize trajectories
+```{r fig.height=20, fig.width=10}
+patchwork::wrap_plots(list_full_model$celltype_plot[c(2:10, 1)], 
+                      ncol = 4, nrow = 3) %>%
+  ggsave(filename="../../../Figures/trajectory_analysis/trajectory_dx_trajectories_mst_additional_methods.pdf", width=20, height=10)
+```
+
+# Other visualisations
+## Visualise expression of key marker genes
 ```{r}
 gene.list <- list(Cepo=DS.res,
                   Voom=Voom.res,
@@ -162,7 +226,7 @@ for (i in seq_along(gene.list)) {
 } 
 ```
 
-# Trajectories highlighted by phenotype, pseudotime, and milestones
+## Trajectories highlighted by phenotype, pseudotime, and milestones
 ```{r fig.height=12, fig.width=20}
 ### assign root cells for pseudotime
 set.seed(2020)

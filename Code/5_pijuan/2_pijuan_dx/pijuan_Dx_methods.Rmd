@@ -90,7 +90,7 @@ lapply(unique(pijuan.filtered$stage), function(stage) {
     
     DS.res <- Cepo(exprs, label)
  
-    Voom <- doDD(exprs, label)
+    Voom <- doVoom(exprs, label)
     Voom.res <- getStats(Voom, method="Voom")
     
     DD <- doDD(exprs, label)
