@@ -1,4 +1,4 @@
-doSample <- function(sce, method=c("Cepo", "Voom", "MAST", "DD"), n=100, p=0.05) {
+doSample <- function(sce, method=c("Cepo", "Cepo2", "Voom", "MAST", "DD"), n=100, p=0.05) {
     mat <- logcounts(sce)
     cty <- as.factor(sce$celltype)
     lapply(levels(cty), function(celltype) {
@@ -16,6 +16,9 @@ doSample <- function(sce, method=c("Cepo", "Voom", "MAST", "DD"), n=100, p=0.05)
             
             if (method == "Cepo") {
                 ds.res <- Cepo(mat.sub, cty.all) 
+                return(ds.res)
+            } else if (method == "Cepo2") {
+                ds.res <- Cepo(mat.sub, cty.all, weight = 0.4, reg = TRUE) 
                 return(ds.res)
             } else if (method == "DD") {
                 system.time(DD <- doDD(mat.sub, cty.all))

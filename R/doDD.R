@@ -36,3 +36,45 @@ doDD <- function(exprsMat, cellTypes){
     names(tt) <- levels(cellTypes)
     return(tt)
 }
+
+doDDPairwise <- function(exprsMat, cellTypes){
+    message("DD")
+    cty <- droplevels(as.factor(cellTypes))
+    names(cty) <- colnames(exprsMat)
+
+    ttAve <- list()
+    for (i in 1:nlevels(cty)) {
+        
+        message(paste0(levels(cty)[[i]], "...."))
+        
+        tt <- list()
+        anchor_celltype = levels(cty)[[i]]
+        other_celltype = setdiff(levels(cty), anchor_celltype)
+        
+        for (j in seq_along(other_celltype)) {
+            tmp_exprsMat <- exprsMat[,cty %in% c(anchor_celltype, other_celltype[[j]])]
+            tmp_celltype <- cty[cty %in% c(anchor_celltype, other_celltype[[j]])]
+            tmp_celltype <- (ifelse(tmp_celltype == anchor_celltype, 1, 0))
+            
+            tt[[j]] <- t(apply(tmp_exprsMat, 1, function(x) {
+                x1 <- x[tmp_celltype == 0]
+                x2 <- x[tmp_celltype == 1]
+                ks <- stats::ks.test(x1, x2, alternative = "greater")
+                return(c(stats=ks$statistic, 
+                         pvalue=ks$p.value))
+            }))
+            tt[[j]] <- as.data.frame(tt[[j]])
+            tt[[j]]$adj.pvalue <- stats::p.adjust(tt[[j]]$pvalue, method = "BH")
+        }
+        idx = rownames(tt[[1]])
+        stats = rowMeans(do.call(cbind, lapply(tt, function(x) { 
+            stat = x$`stats.D^+`
+            names(stat) = rownames(x)
+            return(stat[idx])
+        })))
+        ttAve[[i]] <- sort(stats, decreasing=T, na.last=T)
+        
+    }
+    names(ttAve) <- levels(cty)
+    return(ttAve)
+}

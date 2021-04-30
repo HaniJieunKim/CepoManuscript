@@ -49,70 +49,6 @@ make_dyno = function(sce, prop = 1L){
     )
 }
 
-Cepo_components <- function(exprsMat, cellTypes, score=c("cv", "zprop")) {
-    
-    cts <- names(table(cellTypes))
-    
-    segIdx.list <- list()
-    for(i in 1:length(cts)){
-        idx <- which(cellTypes == cts[i])
-        segIdx.list[[i]] <- segIndex(exprsMat[,idx], score=score)
-    }
-    names(segIdx.list) <- cts
-    
-    segMat <- segIdxList2Mat(segIdx.list)
-    segGenes <- consensusSegIdx(segMat)
-    names(segGenes) <- colnames(segMat)
-    
-    return(segGenes)
-}
-
-segIndex <- function(mat, score){
-
-    nz <- Matrix::rowMeans(mat != 0)
-    ms <- Matrix::rowMeans(mat)
-    sds <- matrixStats::rowSds(mat)
-    cvs <- sds/ms
-    names(nz) = names(sds) = names(cvs) = names(ms) = rownames(mat)
-    
-    x1 <- rank(nz)/(length(nz)+1)
-    x2 <- 1 - rank(cvs)/(length(cvs)+1)
-    
-    if (score == "cv") {segIdx <- x2} 
-    if (score == "zprop") {segIdx <- x1} 
-    
-    return(segIdx)
-}
-
-segIdxList2Mat <- function(segIdx.list) {
-    allGenes <- unique(unlist(lapply(segIdx.list, names)))
-    segMat <- matrix(0, nrow=length(allGenes), ncol=length(segIdx.list))
-    rownames(segMat) <- allGenes
-    colnames(segMat) <- names(segIdx.list)
-    
-    for(i in 1:length(segIdx.list)) {
-        si <- segIdx.list[[i]]
-        segMat[names(si),i] <- si
-    }
-    return(segMat)
-}
-
-consensusSegIdx <- function(mat) {
-    tt <- mat
-    
-    CIGs <- list()
-    for (i in 1:ncol(tt)) {
-        avgRank <- c()
-        for(j in 1:ncol(tt)) {
-            if(i == j){next}
-            avgRank <- cbind(avgRank, tt[,i] - tt[,j])
-        }
-        
-        CIGs[[i]] <- sort(rowMeans(avgRank), decreasing = TRUE)
-    }
-    return(CIGs)
-}
-
 #adapted from http://genoweb.toulouse.inra.fr/~pmartin/pgpmartin/2018/11/14/nicer-scatterplot-in-gggally/
 GGscatterPlot <- function(data, mapping, color_vec, ..., 
                           method = "spearman") {
@@ -149,7 +85,15 @@ GGscatterPlot <- function(data, mapping, color_vec, ...,
 }
 
 
-getStats <- function(res, method=c("Limma","Voom","MAST","ttest","EdgeR","Wilcoxon","DD","DP")) {
+getStats <- function(res, method=c("Limma",
+                                   "Voom",
+                                   "MAST",
+                                   "ttest",
+                                   "EdgeR",
+                                   "Wilcoxon",
+                                   "DD","DP", "LR",
+                                   "Bimod", "SCVI", "M3Drop", 
+                                   "ROC")) {
     
     if (method=="DP") {
         
@@ -249,6 +193,87 @@ getStats <- function(res, method=c("Limma","Voom","MAST","ttest","EdgeR","Wilcox
             
             return(stats)
         })
+        return(result)
+    }
+    
+    if (method %in% c("LR", "Bimod")) {
+        
+        result <- lapply(res, function(x) {
+            stats <- x$p_val_adj
+            
+            logFC = grep("FC", colnames(x), value = TRUE)
+            stats = sapply(1:length(x[,logFC]), function(y) {
+                if (x[,logFC][[y]] > 0) { stats[[y]]} else { 1 - stats[[y]] }
+            })
+            names(stats) = rownames(x)
+            stats <- -log10(stats)
+            stats[is.na(stats)] <- 0
+            stats[is.infinite(stats)] <- 0
+            
+            stats <- sort(stats, decreasing=TRUE, na.last=TRUE)
+            
+            return(stats)
+        })
+        return(result)
+    }
+    
+    if (method=="ROC") {
+        
+        result <- lapply(res, function(x) {
+            stats <- x$myAUC
+            
+            logFC = grep("FC", colnames(x), value = TRUE)
+            stats = sapply(1:length(x[,logFC]), function(y) {
+                if (x[,logFC][[y]] > 0) { stats[[y]]} else { -(1 - stats[[y]]) }
+            })
+            names(stats) = rownames(x)
+            stats[is.na(stats)] <- 0
+            stats[is.infinite(stats)] <- 0
+            
+            stats <- sort(stats, decreasing=TRUE, na.last=TRUE)
+            
+            return(stats)
+        })
+        return(result)
+    }
+    
+    if (method=="SCVI") {
+        
+        result <- lapply(res, function(x) {
+            stats <- log2(x$bayes_factor)
+            logFC = grep("lfc_mean", colnames(x), value = TRUE)
+            stats = sapply(1:length(x[,logFC]), function(y) {
+                if (x[,logFC][[y]] > 0) { stats[[y]]} else { -stats[[y]] }
+            })
+            names(stats) = rownames(x)
+            stats[is.na(stats)] <- 0
+            stats[is.infinite(stats)] <- 0
+            
+            stats <- sort(stats, decreasing=TRUE, na.last=TRUE)
+            
+            return(stats)
+        })
+        return(result)
+    }
+    
+    if (method=="M3Drop") {
+        
+        result <- lapply(levels(factor(res$Group)), function(x) {
+            
+            stats = res$adj_pval
+            stats = sapply(1:nrow(res), function(y) {
+                if (res[y,"Group"] ==  x) { stats[[y]]} else { 0 }
+            })
+            names(stats) = rownames(res)
+            stats = -log10(stats)
+            stats[is.na(stats)] <- 0
+            stats[is.infinite(stats)] <- 0
+            
+            stats <- sort(stats, decreasing=TRUE, na.last=TRUE)
+            return(stats)
+            
+        })
+        names(result) = levels(factor(res$Group))
         return(result)
     }
     

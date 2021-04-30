@@ -1,4 +1,3 @@
-
 #' @title Functions to generate differentially expressed genes
 #' @param exprsMat expression matrix where columns denote cells and rows denote genes
 #' @param cellTypes vector of cell type labels
@@ -98,6 +97,3 @@ consensusSegIdx <- function(mat) {
     return(CIGs)
 }
 ###############
-
-
-
