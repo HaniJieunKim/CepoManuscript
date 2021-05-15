@@ -1,7 +1,7 @@
-doSample <- function(sce, method=c("Cepo", "Cepo2", "Voom", "MAST", "DD"), n=100, p=0.05) {
-    mat <- logcounts(sce)
+doSample <- function(sce, method=c("Cepo", "Voom", "MAST", "DD"), n=100, p=0.05, workers = 2L, coi) {
+    mat <- as.matrix(logcounts(sce))
     cty <- as.factor(sce$celltype)
-    lapply(levels(cty), function(celltype) {
+    lapply(coi, function(celltype) {
         
         dx.rep <- mclapply(1:n, function(x) {
             set.seed(x)
@@ -17,9 +17,6 @@ doSample <- function(sce, method=c("Cepo", "Cepo2", "Voom", "MAST", "DD"), n=100
             if (method == "Cepo") {
                 ds.res <- Cepo(mat.sub, cty.all) 
                 return(ds.res)
-            } else if (method == "Cepo2") {
-                ds.res <- Cepo(mat.sub, cty.all, weight = 0.4, reg = TRUE) 
-                return(ds.res)
             } else if (method == "DD") {
                 system.time(DD <- doDD(mat.sub, cty.all))
                 dd.res <- getStats(DD, method="DD")
@@ -33,7 +30,7 @@ doSample <- function(sce, method=c("Cepo", "Cepo2", "Voom", "MAST", "DD"), n=100
                 mast.res <- getStats(MAST, method="MAST")
                 return(mast.res)
             }
-        }, mc.cores=2)
+        }, mc.cores=workers)
         dx.ave <- lapply(1:n, function(rep) {
             dx.rep[[rep]][[celltype]]
         })

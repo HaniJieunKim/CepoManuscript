@@ -47,6 +47,7 @@ suppressPackageStartupMessages({
 ```{r}
 load("../../../Data/Dx_benchmark_result_HSPC.RData", verbose = T)
 load("../../../Data/Dx_benchmark_result_HSPC_additional_methods.RData", verbose = T)
+load("../../../Data/Dx_benchmark_result_HSPC_additional_methods2.RData", verbose = T)
 load("../../../Data/trajectory_sce_HSC.RData", verbose=T)
 ```
 
@@ -65,9 +66,9 @@ features3 = unique(unlist(lapply(DD.res, function(x) names(x)[1:n])))
 features4 = unique(unlist(lapply(MAST.res, function(x) names(x)[1:n])))
 features5 = unique(unlist(lapply(LR.res, function(x) names(x)[1:n])))
 features6 = unique(unlist(lapply(ROC.res, function(x) names(x)[1:n])))
-features7 = unique(unlist(lapply(Bimod.res, function(x) names(x)[1:n])))
-features8 = unique(unlist(lapply(SCVI.res, function(x) names(x)[1:n])))
-features9 = unique(unlist(lapply(M3DROP.res, function(x) names(x)[1:n])))
+
+features7 = unique(rankCorrRes[[max(which(sapply(rankCorrRes, length) < 1400))]]) 
+features8 = unique(scGeneFitRes[[max(which(sapply(scGeneFitRes, length) == 1300))]]) #200 genes
 
 pdf("../../../Figures/trajectory_analysis/trajectory_dx_upset_plot.pdf", width=10, height=5)
 print(UpSetR::upset(UpSetR::fromList(list(Cepo=features1,
@@ -76,10 +77,9 @@ print(UpSetR::upset(UpSetR::fromList(list(Cepo=features1,
                                           MAST=features4,
                                           LR=features5,
                                           ROC=features6,
-                                          Bimod=features7,
-                                          SCVI=features8,
-                                          M3Drop=features9)),
-                    nsets = 9))
+                                          RankCorr=features7,
+                                          scGeneFit=features8)),
+                    nsets = 8))
 dev.off()
 ```
 
@@ -149,8 +149,7 @@ patchwork::wrap_plots(list_full_model$celltype_plot[c(2:5, 1)],
 list_full_model = tibble(
   features = lst(
     tl_featuresall = unique(c(features1, features2, features3, features4,
-                              features5, features6, features7, features8,
-                              features9
+                              features5, features6, features7, features8
                               )),
     tl_features1 = features1, 
     tl_features2 = features2,
@@ -159,8 +158,7 @@ list_full_model = tibble(
     tl_features5 = features5,
     tl_features6 = features6,
     tl_features7 = features7,
-    tl_features8 = features8,
-    tl_features9 = features9
+    tl_features8 = features8
     ),
   features_name = names(features),
   dyno_data = purrr::map(
@@ -190,9 +188,9 @@ save(list_full_model, file="../../../Data/trajecotories_HSC_traj_dx_results_addi
 
 ## Visualize trajectories
 ```{r fig.height=20, fig.width=10}
-patchwork::wrap_plots(list_full_model$celltype_plot[c(2:10, 1)], 
-                      ncol = 4, nrow = 3) %>%
-  ggsave(filename="../../../Figures/trajectory_analysis/trajectory_dx_trajectories_mst_additional_methods.pdf", width=20, height=10)
+patchwork::wrap_plots(list_full_model$celltype_plot[c(2:9)], 
+                      ncol = 4, nrow = 2) %>%
+  ggsave(filename="../../../Figures/trajectory_analysis/trajectory_dx_trajectories_mst_additional_methods.pdf", width=25, height=10)
 ```
 
 # Other visualisations

@@ -46,8 +46,6 @@ rm(sce_Dropseq_log)
 load("../../../Data/cellbench_DE_benchmark_results.RData", verbose=T)
 load("../../../Data/cellbench_Dx_benchmark_results.RData", verbose=T)
 load("../../../Data/cellbench_Seurat_benchmark_results.RData", verbose=T)
-load("../../../Data/cellbench_SCVI_benchmark_results.RData", verbose=T)
-load("../../../Data/cellbench_M3Drop_benchmark_results.RData", verbose=T)
 ```
 
 ## Source functions
@@ -73,15 +71,15 @@ ggstability_ranked <- lapply(levels(celltype), function(i) {
                 Voom=rank(Voom.res[[i]])[idx],
                 Limma=rank(Limma.res[[i]])[idx],
                 ttest=rank(ttest.res[[i]])[idx],
-                EdgeR=rank(EdgeR.res[[i]])[idx],
-                ROC=rank(ROC.res[[i]])[idx],
-                MAST=rank(MAST.res[[i]])[idx],
-                Wilcoxon=rank(Wilcoxon.res[[i]])[idx],
-                DD=rank(DD.res[[i]])[idx],
-                #M3Drop=rank(M3DROP.res[[i]])[idx],
-                SCVI=rank(SCVI.res[[i]])[idx],
-                Bimod=rank(Bimod.res[[i]])[idx],
                 LR=rank(LR.res[[i]])[idx],
+                
+                ROC=rank(ROC.res[[i]])[idx],
+                Wilcoxon=rank(Wilcoxon.res[[i]])[idx],
+                
+                EdgeR=rank(EdgeR.res[[i]])[idx],
+                MAST=rank(MAST.res[[i]])[idx],
+                
+                DD=rank(DD.res[[i]])[idx],
                 zprop=zprop[idx])
   rownames(df) = idx
   
@@ -95,50 +93,12 @@ lapply(levels(celltype), function(i) {
   
   type <- i
   GGally::ggpairs(ggstability_ranked[[i]],
-                  1:12,
+                  1:10,
                   lower = list(continuous = wrap(GGscatterPlot, color_vec=ggstability_ranked[[i]]$zprop)),
-                  upper = list(continuous = wrap("cor", method= "pearson"))) %>% ggsave(filename=paste0("../../../Figures/cellbench/cellbench_ggpairs_stability_210429", type,".pdf"), width=15, height=15)
+                  upper = list(continuous = wrap("cor", method= "pearson"))) %>% ggsave(filename=paste0("../../../Figures/cellbench/cellbench_ggpairs_stability_210504_", type,".pdf"), width=15, height=15)
   
 })
 ```
-
-```{r}
-ggstability_ranked <- lapply(levels(celltype), function(i) {
-  
-  idx <- names(cv)
-  df=data.frame(Cepo=DS.res[[i]][idx],
-                Voom=Voom.res[[i]][idx],
-                Limma=Limma.res[[i]][idx],
-                ttest=ttest.res[[i]][idx],
-                EdgeR=EdgeR.res[[i]][idx],
-                ROC=ROC.res[[i]][idx],
-                MAST=MAST.res[[i]][idx],
-                Wilcoxon=Wilcoxon.res[[i]][idx],
-                DD=DD.res[[i]][idx],
-                #M3Drop=rank(M3DROP.res[[i]])[idx],
-                SCVI=SCVI.res[[i]][idx],
-                Bimod=Bimod.res[[i]][idx],
-                LR=LR.res[[i]][idx],
-                zprop=zprop[idx])
-  rownames(df) = idx
-  
-  
-  return(df)
-  
-})
-names(ggstability_ranked) <- levels(celltype)
-
-lapply(levels(celltype), function(i) {
-  
-  type <- i
-  GGally::ggpairs(ggstability_ranked[[i]],
-                  1:12,
-                  lower = list(continuous = wrap(GGscatterPlot, color_vec=ggstability_ranked[[i]]$zprop)),
-                  upper = list(continuous = wrap("cor", method= "spearman"))) %>% ggsave(filename=paste0("../../../Figures/cellbench/cellbench_ggpairs_stability2_210429", type,".pdf"), width=15, height=15)
-  
-})
-```
-
 
 # Session Info
 ```{r}

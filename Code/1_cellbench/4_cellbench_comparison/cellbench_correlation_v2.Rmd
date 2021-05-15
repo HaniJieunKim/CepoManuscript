@@ -46,8 +46,6 @@ rm(sce_Dropseq_log)
 load("../../../Data/cellbench_DE_benchmark_results.RData", verbose=T)
 load("../../../Data/cellbench_Dx_benchmark_results.RData", verbose=T)
 load("../../../Data/cellbench_Seurat_benchmark_results.RData", verbose=T)
-load("../../../Data/cellbench_SCVI_benchmark_results.RData", verbose=T)
-load("../../../Data/cellbench_M3Drop_benchmark_results.RData", verbose=T)
 ```
 
 ## Source functions
@@ -73,46 +71,36 @@ g = lapply(levels(celltype), function(i) {
                 Voom=rank(Voom.res[[i]])[idx],
                 Limma=rank(Limma.res[[i]])[idx],
                 ttest=rank(ttest.res[[i]])[idx],
-                EdgeR=rank(EdgeR.res[[i]])[idx],
+                LR=rank(LR.res[[i]])[idx],
+                
                 ROC=rank(ROC.res[[i]])[idx],
-                MAST=rank(MAST.res[[i]])[idx],
                 Wilcoxon=rank(Wilcoxon.res[[i]])[idx],
-                DD=rank(DD.res[[i]])[idx],
-                #M3Drop=rank(M3DROP.res[[i]])[idx],
-                SCVI=rank(SCVI.res[[i]])[idx],
-                Bimod=rank(Bimod.res[[i]])[idx],
-                LR=rank(LR.res[[i]])[idx]
+                
+                EdgeR=rank(EdgeR.res[[i]])[idx],
+                MAST=rank(MAST.res[[i]])[idx],
+                
+                DD=rank(DD.res[[i]])[idx]
                 )
   rownames(df) = idx
-
-  res <- rcorr(as.matrix(df), type="pearson")
+  res <- rcorr(as.matrix(df), type="spearman")
   res_cor <- c(res$r)
   res_cor <- matrix(res_cor, nrow=ncol(df), ncol=ncol(df))
   rownames(res_cor) <- colnames(df)
   colnames(res_cor) <- colnames(df)
+  res_cor = round(res_cor, 3)
   
   my_col <- rev(RColorBrewer::brewer.pal(11, "Spectral"))
-  #corrplot(res_cor, type = "lower", p.mat = res$P, 
-           #sig.level = 0.01, addCoef.col = "black",
-           #tl.col="black", tl.srt=45,title=i,
-           #col= colorRampPalette(my_col)(20)
-           #)
-  c = ggcorrplot(res_cor, hc.order = FALSE, 
-               #type = "lower", 
-               #method  = "circle",
-               outline.color = "white") + 
-      scale_fill_gradient2(limit = c(-0.2,1), 
-                           low = "blue", 
-                           high = "red", 
-                           mid = "white", 
-                           midpoint = 0.4)
+
+  c = ggcorrplot(res_cor, hc.order = FALSE, type = "lower", 
+                 method = "circle", show.diag = TRUE, lab = TRUE, p.mat = NULL,
+                 insig = c("pch", "blank")) +
+    scale_fill_gradientn(colors = my_col, 100)
   
   return(c)
-    
+  
 })
 
-patchwork::wrap_plots(g, ncol =3) %>% ggsave(filename = "../../../Figures/cellbench/cellbench_correlation_210429.pdf", 
-    width=20, height=6)
+patchwork::wrap_plots(g, ncol =3) %>% ggsave(filename = "../../../Figures/cellbench/cellbench_correlation_210429.pdf", width=20, height=6)
 ```
 
 # Session Info
