@@ -32,7 +32,6 @@ plotHeatmap <- function(sce, gene.list, celltype, slim=FALSE, verbose=F, scale=T
 }
 
 
-
 make_dyno = function(sce, prop = 1L){
     ncells = ncol(sce)
     if(prop == 1){
@@ -199,7 +198,8 @@ getStats <- function(res, method=c("Limma",
     if (method %in% c("LR", "Bimod")) {
         
         result <- lapply(res, function(x) {
-            stats <- x$p_val_adj
+            #stats <- x$p_val_adj
+            stats <- x$p_val
             
             logFC = grep("FC", colnames(x), value = TRUE)
             stats = sapply(1:length(x[,logFC]), function(y) {
@@ -220,7 +220,7 @@ getStats <- function(res, method=c("Limma",
     if (method=="ROC") {
         
         result <- lapply(res, function(x) {
-            stats <- x$myAUC
+            stats <- x$power
             
             logFC = grep("FC", colnames(x), value = TRUE)
             stats = sapply(1:length(x[,logFC]), function(y) {

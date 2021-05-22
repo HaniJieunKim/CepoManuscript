@@ -57,13 +57,11 @@ DS.gene <- lapply(DS.res, function(x) names(x))
 MAST.gene <- lapply(MAST.res, function(x) names(x))
 Voom.gene <- lapply(Voom.res, function(x) names(x))
 DD.gene <- lapply(DD.res, function(x) names(x))
-LR.gene <- lapply(LR.res, function(x) names(x))
 
 Dx.gene <- list(Cepo=DS.gene,
                 MAST=MAST.gene,
                 Voom=Voom.gene,
-                DD=DD.gene,
-                LR=LR.gene)
+                DD=DD.gene)
 ```
 
 # Generate Upset plot of overlaps (top 50 genes)

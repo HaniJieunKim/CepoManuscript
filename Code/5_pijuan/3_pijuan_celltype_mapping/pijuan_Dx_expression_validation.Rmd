@@ -88,17 +88,18 @@ g1 <- ggplot(toPlot[[1]], aes(x=UMAP1, y=UMAP2, col=celltype %in% cty & stage %i
 s=0.3
 a=0.1
 n=1
+
 g2 <- ggplot(toPlot[[1]], aes(x=UMAP1, y=UMAP2, col=as.numeric(GNG3))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 g3 <- ggplot(toPlot[[2]], aes(x=UMAP1, y=UMAP2, col=as.numeric(BEX4))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 g4 <- ggplot(toPlot[[3]], aes(x=UMAP1, y=UMAP2, col=as.numeric(HMGB1))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 g5 <- ggplot(toPlot[[4]], aes(x=UMAP1, y=UMAP2, col=as.numeric(UTF1))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 
 ggpubr::ggarrange(g1,g2,g3,g4,g5, ncol=5) %>% 
@@ -117,8 +118,8 @@ genes <- lapply(result_rank, function(x) {
   g <- unique(unlist(g))
   return(g)
 })
-genes_diff <- lapply(seq_along(genes_v2), function(x) {
-  setdiff(genes_v2[[x]], unlist(genes_v2[-x]))
+genes_diff <- lapply(seq_along(genes), function(x) {
+  setdiff(genes[[x]], unlist(genes[-x]))
 })
 str(genes_diff)
 toplot <- lapply(genes_diff, function(x) {
@@ -139,16 +140,16 @@ s=0.3
 a=0.1
 n=1
 g2 <- ggplot(toPlot[[1]], aes(x=UMAP1, y=UMAP2, col=as.numeric(LYPD2))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 g3 <- ggplot(toPlot[[2]], aes(x=UMAP1, y=UMAP2, col=as.numeric(WFDC2))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 g4 <- ggplot(toPlot[[3]], aes(x=UMAP1, y=UMAP2, col=as.numeric(TMSB10))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 g5 <- ggplot(toPlot[[4]], aes(x=UMAP1, y=UMAP2, col=as.numeric(TXNDC12))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 
 ggpubr::ggarrange(g1,g2,g3,g4,g5, ncol=5) %>% 
@@ -189,16 +190,16 @@ s=0.3
 a=0.1
 n=1
 g2 <- ggplot(toPlot[[1]], aes(x=UMAP1, y=UMAP2, col=as.numeric(GFRA3))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") +
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 g3 <- ggplot(toPlot[[2]], aes(x=UMAP1, y=UMAP2, col=as.numeric(LAPTM4B))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 g4 <- ggplot(toPlot[[3]], aes(x=UMAP1, y=UMAP2, col=as.numeric(SMC6))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") +  
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 g5 <- ggplot(toPlot[[4]], aes(x=UMAP1, y=UMAP2, col=as.numeric(YPEL3))) +
-  ggrastr::geom_point_rast(alpha=a, size=s) + viridis::scale_color_viridis(option="C") + 
+  ggrastr::geom_point_rast(alpha=a, size=s) + scale_color_distiller(type = "div", palette = "Spectral") + 
   theme_classic() + theme(aspect.ratio = 1, legend.position = "bottom")
 
 ggpubr::ggarrange(g1,g2,g3,g4,g5, ncol=5) %>% ggsave(filename="../../../Figures/pijuan/pijuan_gene_validation_intmeso_E8.0.pdf", width=20, height=5)

@@ -43,13 +43,13 @@ rm(sce_Dropseq_log)
 
 load("../../../Data/cellbench_DE_benchmark_results.RData", verbose=T)
 load("../../../Data/cellbench_Seurat_benchmark_results.RData", verbose=T)
-load("../../../Data/cellbench_SCVI_benchmark_results.RData", verbose=T)
-load("../../../Data/cellbench_M3Drop_benchmark_results.RData", verbose=T)
+load("../../../Data/cellbench_additionalMethods_benchmark_results.RData", verbose=T)
 ```
 
 ## Source functions
 ```{r}
 source("../../../R/utils.R")
+source("../../../R/doDE.R")
 ```
 
 # Extract genes
@@ -61,14 +61,10 @@ DE.res <- list(Limma=Limma.res,
                Wilcoxon=Wilcoxon.res,
                EdgeR=EdgeR.res,
                LR = LR.res,
-               ROC = ROC.res,
-               Bimod = Bimod.res,
-               SCVI = SCVI.res,
-               M3DROP = M3DROP.res
+               ROC = ROC.res
                )
 
 DE.gene <- lapply(DE.res, function(x) lapply(x, function(y) names(y)))
-
 # sapply(1:3, function(i) sapply(DE.gene, function(x) length(x[[i]])) == 13542)
 ```
 
@@ -84,11 +80,33 @@ lapply(cty, function(celltype) {
 })
 ```
 
+Gnerate list for RankCorr and scGeneFit
+```{r}
+####### rankCorr
+rankCorrGenes = rankCorrRes[["140"]]
+exprsMat = logcounts(sce_10x_log)
+res = doLimma(exprsMat[rownames(exprsMat) %in% rankCorrGenes,],
+              sce_10x_log$celltype)
+res = getStats(res, method = "Limma")
+rankCorrGenes.res = lapply(res, function(x) names(x[1:200]))
+table(table(unlist(rankCorrGenes.res)) == 1)
+
+scGeneFitGenes = scGeneFitRes[["600"]]
+exprsMat = logcounts(sce_10x_log)
+res = doLimma(exprsMat[rownames(exprsMat) %in% scGeneFitGenes,],
+              sce_10x_log$celltype)
+res = getStats(res, method = "Limma")
+scGeneFitGenes.res = lapply(res, function(x) names(x[1:200]))
+table(table(unlist(scGeneFitGenes.res)) == 1)
+```
+
 # Generate heatmaps (top 200 genes)
 ```{r}
 #### select top 200 genes
 DE.top <- lapply(DE.gene, function(x) lapply(x, function(y) y[1:200]))
-
+DE.top$RankCorr = rankCorrGenes.res
+DE.top$scGeneFit = scGeneFitGenes.res
+  
 #### reorder cell types
 celltype <- as.character(sce_10x_log$celltype)
 celltype[celltype %in% "HCC827"] <- "1_HCC827"

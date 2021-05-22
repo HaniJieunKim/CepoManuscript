@@ -52,8 +52,6 @@ source("../../../R/doDE.R")
 source("../../../R/doDD.R")
 source("../../../R/doLR.R")
 source("../../../R/utils.R")
-source("../../../R/doSCVI.R")
-source("../../../R/doM3Drop.R")
 ```
 
 # Find cell identity genes 
@@ -117,35 +115,9 @@ LR.res <- getStats(LR, method="LR")
 system.time(ROC <- doROC(seu, cty))
 ROC.res <- getStats(ROC, method="ROC")
 
-system.time(Bimod <- doBimod(seu, cty))
-Bimod.res <- getStats(Bimod, method="Bimod")
-
 save(LR, LR.res,
      ROC, ROC.res,
-     Bimod, Bimod.res,
      file="../../../Data/cellbench_Seurat_benchmark_results.RData")
-```
-
-```{r}
-##### run scVI
-seu = Seurat::as.Seurat(sce_10x_log)
-seu@active.ident = as.factor(seu$celltype)
-cty = as.factor(seu$celltype)
-
-system.time(SCVI <- doSCVI(seu, cty, n_epoch = 400))
-SCVI.res <- getStats(SCVI, method="SCVI")
-
-save(SCVI, SCVI.res,
-     file="../../../Data/cellbench_SCVI_benchmark_results.RData")
-```
-
-```{r}
-##### run M3Drop
-M3DROP <- doM3Drop(logcounts(sce_10x_log), cty) 
-M3DROP.res <- getStats(M3DROP, method="M3Drop")
-
-save(M3DROP, M3DROP.res,
-     file="../../../Data/cellbench_M3Drop_benchmark_results.RData")
 ```
 
 # Session Info
