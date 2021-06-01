@@ -34,8 +34,11 @@ runs = 20
 
 # param = SerialParam()
 source("../../../R/Cepo.R")
-source("../../../R/doDE.R")
 source("../../../R/doDD.R")
+source("../../../R/doDE.R")
+source("../../../R/doSCVI.R")
+source("../../../R/doM3Drop.R")
+source("../../../R/doLR.R")
 ```
 
 # Simulating data
@@ -46,7 +49,7 @@ data_grid = expand.grid(
   n_cell_types = 3, 
   n_genes = 20000,
   n_cells = c(500, 1000, 5000, 10000)
-  # n_cells = c(100, 500)
+  # n_cells = c(100)
 ) %>% as_tibble() %>% 
   dplyr::mutate(splatter_obj = furrr::future_pmap(
     .l = lst(n_cell_types, n_genes, n_cells),
@@ -54,7 +57,7 @@ data_grid = expand.grid(
                   n_genes = n_genes, 
                   n_cells = n_cells){
       # # browser()
-      exprs_mat = log2(matrix(rpois(n_genes*n_cells, lambda = 0.5), nrow = n_genes) + 1L)
+      exprs_mat = log2(matrix(rpois(n_genes*n_cells, lambda = 0.1), nrow = n_genes) + 1L)
       rownames(exprs_mat) = paste0("gene", 1:n_genes)
       colnames(exprs_mat) = paste0("cell", 1:n_cells)
       cell_types = sample(letters[1:n_cell_types], size = n_cells, replace = TRUE)
@@ -68,13 +71,63 @@ data_grid = expand.grid(
 data_grid %>% glimpse()
 ```
 
+```{r}
+# set.seed(123)
+# s = sample(1:500, 100)
+# small_x = data_grid$splatter_obj[[1]]$exprs_mat[,s]
+# small_y = data_grid$splatter_obj[[1]]$cell_types[s]
+# small_x2 = round(2^small_x - 1)
+
+# sce = SingleCellExperiment::SingleCellExperiment(
+#   assays = list(counts = small_x2, logcounts = small_x2), 
+#   colData = DataFrame(cellTypes = small_y))
+
+
+# seu = SeuratObject::CreateSeuratObject(counts = small_x2, assay = "data")
+# small_y = as.factor(small_y)
+# names(small_y) = colnames(small_x)
+# seu@active.ident = as.factor(small_y)
+# seu
+# Seurat::CreateSeuratObject(counts = small_x2)
+
+# system.time({Cepo::Cepo(exprsMat = small_x, cellTypes = small_y, computePvalue = 1000)})
+# system.time({doDD(exprsMat = small_x, cellTypes = small_y)})
+# system.time({doVoom(exprsMat = small_x, cellTypes = small_y)})
+# system.time({doMAST(exprsMat = small_x, cellTypes = small_y)})
+# system.time({doLimma(exprsMat = small_x, cellTypes = small_y)})
+# system.time({doWilcoxon(exprsMat = small_x, cellTypes = small_y)})
+# system.time({doTest(exprsMat = small_x, cellTypes = small_y)})
+# system.time({doEdgeR(exprsMat = small_x, cellTypes = small_y)})
+# system.time({doSCVI(seuObj = seu, cellTypes = small_y)})
+# system.time({doM3Drop(exprsMat = small_x, cellTypes = small_y)})
+# system.time({doLR(seuObj = seu, cellTypes = small_y)})
+# system.time({doBimod(seuObj = seu, cellTypes = small_y)})
+# system.time({doROC(seuObj = seu, cellTypes = small_y)})
+```
+
+
 # Functions that repeats Dx calculations 
 ```{r}
 timing_dx = function(exprs_mat, cell_types){
   ncells = ncol(exprs_mat)
+  count_mat = round(2^exprs_mat - 1)
+  seu = SeuratObject::CreateSeuratObject(counts = count_mat, assay = "data")
+  cell_types = as.factor(cell_types)
+  names(cell_types) = colnames(count_mat)
+  seu@active.ident = cell_types
   ## All timing are in seconds 
-  ds_time = system.time(Cepo(exprsMat = exprs_mat, cellTypes = cell_types))[["elapsed"]]
+  cepo_time = system.time(Cepo::Cepo(exprsMat = exprs_mat, cellTypes = cell_types))[["elapsed"]]
+  cepo1000_time = system.time(Cepo::Cepo(exprsMat = exprs_mat, cellTypes = cell_types, computePvalue = 1000))[["elapsed"]]
   voom_time = system.time(doVoom(exprsMat = exprs_mat, cellTypes = cell_types))[["elapsed"]]
+  limma_time = system.time(doLimma(exprsMat = exprs_mat, cellTypes = cell_types))[["elapsed"]]
+  wilcox_time = system.time(doWilcoxon(exprsMat = exprs_mat, cellTypes = cell_types))[["elapsed"]]
+  ttest_time = system.time(doTest(exprsMat = exprs_mat, cellTypes = cell_types))[["elapsed"]]
+  m3drop_time = system.time(doM3Drop(exprsMat = count_mat, cellTypes = cell_types))[["elapsed"]]
+  edgeR_time = system.time(doEdgeR(countMatrix = count_mat, cellTypes = cell_types))[["elapsed"]]
+  # scvi_time = system.time(doSCVI(seuObj = exprs_mat, cellTypes = cell_types))[["elapsed"]]
+  lr_time = system.time(doLR(seuObj = seu, cellTypes = cell_types))[["elapsed"]]
+  bimod_time = system.time(doBimod(seuObj = seu, cellTypes = cell_types))[["elapsed"]]
+  roc_time = system.time(doROC(seuObj = seu, cellTypes = cell_types))[["elapsed"]]
   
   if(ncells > 10000){
     mast_time = Inf
@@ -85,8 +138,16 @@ timing_dx = function(exprs_mat, cell_types){
   }
   
   result = tibble(
-    method = c("Cepo", "Voom", "MAST", "DD"),
-    time = c(ds_time, voom_time, mast_time, dd_time)
+    method = c("Cepo", "Cepo1000", "Voom", "MAST", "DD", "Limma", "Wilcox", "Ttest", "M3Drop", 
+               "edgeR",
+               # "SCVI", 
+               "LR",
+               "bimod", "ROC"),
+    time = c(cepo_time, cepo1000_time, voom_time, mast_time, dd_time, limma_time, wilcox_time, ttest_time, m3drop_time,
+             edgeR_time, 
+             # scvi_time,
+             lr_time,
+             bimod_time, roc_time)
     # unit = "second"
   )
   return(result)
@@ -98,7 +159,7 @@ multiple_timing = function(runs = 100, exprs_mat, cell_types){
     .f = function(i){
       timing_dx(exprs_mat = exprs_mat, cell_types = cell_types)}, 
     .progress = TRUE, 
-    .options = furrr::furrr_options(packages = c("limma", "MAST")))
+    .options = furrr::furrr_options(packages = c("Cepo", "limma", "MAST", "M3Drop", "edgeR", "Seurat")))
   
   n_digits = floor(log10(runs)) + 1L
   names(result_list) = sprintf(paste0("exp_%0", n_digits, "d"), seq_len(runs))
@@ -119,7 +180,7 @@ multiple_timing = function(runs = 100, exprs_mat, cell_types){
 ```{r}
 timing_tbl = purrr::map(.x = data_grid$splatter_obj,
                         .f = ~ multiple_timing(
-                          runs = runs, 
+                          runs = 10, 
                           exprs_mat = .x$exprs_mat, 
                           cell_types = .x$cell_types))
 
@@ -128,7 +189,7 @@ result_tbl = data_grid %>%
   dplyr::select(-splatter_obj) %>% 
   tidyr::unnest("timing_tbl")
 
-write_csv(x = result_tbl, path = "../../../Table/simulation_timing.csv")
+write_csv(x = result_tbl, fil = "../../../Table/simulation_timing.csv")
 ```
 
 ```{r}
@@ -153,16 +214,17 @@ time_plot = plotdf %>%
   ggplot(aes(x = `Number of cells`, y = median_time,
              colour = method)) +
   geom_point(size = 4) +
-  geom_errorbar(aes(ymin=q1_time, ymax=q3_time), width=.3) +
+  # geom_errorbar(aes(ymin=q1_time, ymax=q3_time), width=.3) +
   geom_line(aes(group = method), size = 1.2) +
-  scale_y_log10(breaks = c(y_breaks, 5*y_breaks), limits = c(NA, 4000)) +
+  scale_y_log10(breaks = c(y_breaks, 5*y_breaks), limits = c(NA, 5e4)) +
   annotation_logticks(sides = "l") +
   facet_wrap(~ `Number of genes`, 
              scales = "free_y", labeller = label_both) + 
   labs(x = "Number of cells", 
        y = "Median computational time \n (seconds)",
        colour = "Method") +
-  scale_colour_brewer(palette = "Set1") +
+  ggsci::scale_color_d3(palette = "category20") +
+  # scale_colour_brewer(palette = "Set1") +
   theme_bw(18) +
   theme(legend.position = "bottom", 
         panel.grid.minor = element_blank(), 
